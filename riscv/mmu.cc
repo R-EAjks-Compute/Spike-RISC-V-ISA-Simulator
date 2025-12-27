@@ -223,9 +223,12 @@ void mmu_t::check_triggers(triggers::operation_t operation,
   reg_t addr, bool virt, std::size_t data_size, const std::uint8_t* bytes)
 {
   assert(data_size > 0);
-  assert(data_size <= sizeof(reg_t));
-  check_triggers(operation, addr, virt,
-    data_size, reg_from_bytes(data_size, bytes));
+
+  for (size_t offset = 0; offset < data_size; offset += sizeof(reg_t)) {
+    auto this_size = std::min(data_size - offset, sizeof(reg_t));
+    auto this_data = reg_from_bytes(this_size, bytes + offset);
+    check_triggers(operation, addr + offset, virt, this_size, this_data);
+  }
 }
 
 void mmu_t::check_triggers(triggers::operation_t operation,
